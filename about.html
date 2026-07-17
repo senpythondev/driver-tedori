@@ -6,57 +6,76 @@
 <title>運営者情報｜軽貨物ドライバー「本当の手取り」計算ツール</title>
 <style>
   :root {
-    --bg: #f5f6f8;
+    --bg: #e8ecf1;
     --card: #ffffff;
-    --text: #1a1a1a;
-    --sub: #666;
-    --border: #dcdfe4;
-    --accent: #0b6e4f;
+    --text: #1a2332;
+    --sub: #5a6575;
+    --border: #c8d1dc;
+    --border-light: #e2e7ee;
+    --accent: #1e5c48;
+    --accent-dark: #174a3a;
+    --accent-soft: #f0f7f4;
+    --navy: #243447;
+    --shadow-md: 0 2px 12px rgba(26, 35, 50, 0.07);
+    --radius-sm: 10px;
+    --radius-md: 14px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
     background: var(--bg);
     color: var(--text);
-    line-height: 1.8;
+    line-height: 1.75;
     -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
   }
-  .container { max-width: 480px; margin: 0 auto; padding: 0 16px 24px; }
-  header { text-align: center; padding: 24px 0 8px; }
-  header h1 { font-size: 1.25rem; line-height: 1.4; }
+  .container { max-width: 480px; margin: 0 auto; padding: 0 16px 56px; }
+  header { text-align: center; padding: 28px 0 10px; }
+  header h1 {
+    font-size: 1.28rem;
+    line-height: 1.45;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--navy);
+  }
   .card {
     background: var(--card);
-    border-radius: 12px;
-    padding: 20px 16px;
-    margin-top: 16px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-radius: var(--radius-md);
+    padding: 22px 18px;
+    margin-top: 18px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-light);
     font-size: 0.9rem;
   }
   .card h2 {
-    font-size: 1rem;
-    margin: 20px 0 8px;
-    padding-left: 8px;
-    border-left: 4px solid var(--accent);
+    font-size: 0.9375rem;
+    font-weight: 700;
+    margin: 22px 0 10px;
+    padding-left: 10px;
+    border-left: 3px solid var(--accent);
+    color: var(--navy);
   }
   .card h2:first-child { margin-top: 0; }
-  .card p { margin-bottom: 8px; }
+  .card p { margin-bottom: 10px; color: var(--text); }
   table.info { width: 100%; border-collapse: collapse; }
   table.info th, table.info td {
-    padding: 10px 4px;
-    border-bottom: 1px solid var(--border);
+    padding: 13px 8px;
+    border-bottom: 1px solid var(--border-light);
     text-align: left;
     vertical-align: top;
   }
-  table.info th { width: 6.5em; font-weight: 600; color: var(--sub); }
+  table.info tr:last-child th,
+  table.info tr:last-child td { border-bottom: none; }
+  table.info th { width: 6.5em; font-weight: 600; color: var(--sub); font-size: 0.8125rem; }
   a { color: var(--accent); }
   footer {
     text-align: center;
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--sub);
-    padding: 24px 0 8px;
+    padding: 36px 0 12px;
   }
-  footer nav a { color: var(--sub); margin: 0 8px; }
-  footer .copy { margin-top: 8px; font-size: 0.75rem; }
+  footer nav a { color: var(--sub); margin: 0 8px; text-decoration: none; }
+  footer .copy { margin-top: 10px; font-size: 0.72rem; opacity: 0.85; }
 </style>
 </head>
 <body>
