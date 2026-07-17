@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>軽貨物ドライバー「本当の手取り」計算ツール</title>
+<style>
+  :root {
+    --bg: #eef1f4;
+    --card: #ffffff;
+    --text: #1c2329;
+    --sub: #5c6570;
+    --border: #d8dee5;
+    --border-light: #e8ecf0;
+    --accent: #0a6b4e;
+    --accent-dark: #085a41;
+    --accent-light: #e8f5f0;
+    --accent-soft: #f2faf7;
+    --danger: #c53030;
+    --danger-bg: #fef2f2;
+    --shadow-sm: 0 1px 2px rgba(28, 35, 41, 0.04);
+    --shadow-md: 0 4px 16px rgba(28, 35, 41, 0.06), 0 1px 3px rgba(28, 35, 41, 0.04);
+    --shadow-lg: 0 8px 28px rgba(28, 35, 41, 0.08), 0 2px 6px rgba(28, 35, 41, 0.04);
+    --radius-sm: 10px;
+    --radius-md: 14px;
+    --radius-lg: 18px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 480px; margin: 0 auto; padding: 0 16px 56px; }
+
+  header { text-align: center; padding: 28px 0 12px; }
+  header h1 {
+    font-size: 1.3rem;
+    line-height: 1.45;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .pr-badge {
+    display: inline-block;
+    font-size: 0.68rem;
+    color: var(--sub);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    margin-top: 10px;
+    letter-spacing: 0.02em;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: var(--radius-md);
+    padding: 22px 18px;
+    margin-top: 18px;
+    box-shadow: var(--shadow-md);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+  }
+
+  .field { margin-bottom: 18px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .field .hint { font-weight: 400; color: var(--sub); font-size: 0.75rem; }
+  .field input[type="text"] {
+    width: 100%;
+    font-size: 1.05rem;
+    padding: 13px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: #fafbfc;
+    color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  .field input[type="text"]::placeholder { color: #a0a8b0; }
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(10, 107, 78, 0.12);
+  }
+
+  /* 手数料タイプ切替（セグメントボタン） */
+  .segment {
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    margin-bottom: 10px;
+    background: #fafbfc;
+    padding: 3px;
+    gap: 3px;
+  }
+  .segment button {
+    flex: 1;
+    padding: 11px 0;
+    font-size: 0.9rem;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sub);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, box-shadow 0.15s;
+  }
+  .segment button.active {
+    background: var(--card);
+    color: var(--accent);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .row2 { display: flex; gap: 12px; }
+  .row2 .field { flex: 1; }
+
+  .calc-btn {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #fff;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    margin-top: 10px;
+    box-shadow: 0 4px 14px rgba(10, 107, 78, 0.28);
+    transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+  }
+  .calc-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 8px rgba(10, 107, 78, 0.22);
+    opacity: 0.95;
+  }
+
+  /* ===== 結果表示 ===== */
+  #result { display: none; }
+  .result-main {
+    text-align: center;
+    padding: 24px 18px 22px;
+    background: linear-gradient(165deg, var(--accent-soft) 0%, var(--card) 55%);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid var(--accent-light);
+  }
+  .result-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--sub);
+    letter-spacing: 0.04em;
+    text-transform: none;
+  }
+  .result-tedori {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin: 6px 0 0;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+    color: var(--text);
+  }
+  .result-tedori.negative { color: var(--danger); }
+  .result-main .result-label:nth-of-type(3) {
+    margin-top: 22px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-light);
+  }
+  .result-hourly {
+    font-size: 2.75rem;
+    font-weight: 800;
+    color: var(--accent);
+    margin: 6px 0 0;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.15;
+  }
+  .result-hourly.negative { color: var(--danger); }
+  .result-keep {
+    display: inline-block;
+    background: var(--accent-light);
+    border: 1px solid rgba(10, 107, 78, 0.12);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--accent-dark);
+    margin-top: 20px;
+  }
+
+  /* 内訳テーブル */
+  .breakdown h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+  .breakdown table { width: 100%; border-collapse: collapse; font-size: 0.925rem; }
+  .breakdown td {
+    padding: 11px 6px;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .breakdown td.amount { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .breakdown td.pct { text-align: right; color: var(--sub); font-size: 0.78rem; width: 4.5em; white-space: nowrap; }
+  .breakdown tr.heavy td {
+    background: var(--danger-bg);
+    color: var(--danger);
+    font-weight: 700;
+    border-bottom-color: rgba(197, 48, 48, 0.12);
+  }
+  .heavy-tag {
+    display: inline-block;
+    font-size: 0.65rem;
+    background: var(--danger);
+    color: #fff;
+    border-radius: 5px;
+    padding: 1px 6px;
+    margin-left: 6px;
+    vertical-align: middle;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  .breakdown tr.total td {
+    border-bottom: none;
+    border-top: 2px solid var(--text);
+    font-weight: 700;
+    font-size: 1.05rem;
+    padding-top: 14px;
+  }
+  .breakdown tr.total td.negative { color: var(--danger); }
+
+  /* 診断→出口CTA */
+  .cta-section h2 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+  .diagnosis {
+    font-size: 0.925rem;
+    margin-bottom: 16px;
+    line-height: 1.7;
+    color: var(--text);
+  }
+  .diagnosis strong { color: var(--danger); }
+  .cta-item { margin-bottom: 16px; }
+  .cta-item:last-of-type { margin-bottom: 0; }
+  .cta-msg { font-size: 0.875rem; margin-bottom: 8px; color: var(--sub); line-height: 1.6; }
+  .cta-btn {
+    display: block;
+    text-align: center;
+    padding: 14px 16px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(180deg, var(--accent) 0%, var(--accent-dark) 100%);
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    box-shadow: 0 3px 12px rgba(10, 107, 78, 0.22);
+    transition: transform 0.1s, opacity 0.15s;
+  }
+  .cta-btn.secondary {
+    background: var(--card);
+    color: var(--accent);
+    border: 2px solid var(--accent);
+    box-shadow: none;
+  }
+  .cta-btn:active {
+    transform: translateY(1px);
+    opacity: 0.92;
+  }
+  .cta-pr {
+    font-size: 0.68rem;
+    color: var(--sub);
+    margin-top: 14px;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  .note {
+    font-size: 0.75rem;
+    color: var(--sub);
+    margin-top: 18px;
+    line-height: 1.65;
+    padding: 0 2px;
+  }
+
+  footer {
+    text-align: center;
+    font-size: 0.78rem;
+    color: var(--sub);
+    padding: 36px 0 12px;
+  }
+  footer nav a {
+    color: var(--sub);
+    margin: 0 8px;
+    text-decoration: none;
+  }
+  footer .copy { margin-top: 10px; font-size: 0.72rem; opacity: 0.85; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>軽貨物ドライバー<br>「本当の手取り」計算ツール</h1>
+    <span class="pr-badge">PR（広告を含みます）</span>
+  </header>
+
+  <!-- 入力フォーム -->
+  <form class="card" id="calcForm" autocomplete="off">
+    <div class="field">
+      <label for="uriage">月の売上（報酬総額） <span class="hint">手数料を引く前の総額</span></label>
+      <input type="text" id="uriage" inputmode="numeric" placeholder="例：400000">
+    </div>
+
+    <div class="field">
+      <label>手数料の種類</label>
+      <div class="segment" id="feeTypeSeg">
+        <button type="button" data-type="percent" class="active">率（%）</button>
+        <button type="button" data-type="fixed">固定（円/月）</button>
+      </div>
+      <div id="feeRateField">
+        <input type="text" id="feeRate" inputmode="decimal" placeholder="例：15（相場15〜20%）">
+      </div>
+      <div id="feeFixedField" style="display:none">
+        <input type="text" id="feeFixed" inputmode="numeric" placeholder="例：10000（相場5,000〜20,000円）">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="gasoline">ガソリン代（月）</label>
+      <input type="text" id="gasoline" inputmode="numeric" placeholder="例：40000">
+    </div>
+
+    <div class="field">
+      <label for="vehicle">車両費（リース/ローン・月）</label>
+      <input type="text" id="vehicle" inputmode="numeric" placeholder="例：30000">
+    </div>
+
+    <div class="field">
+      <label for="insurance">保険（任意＋貨物・月）</label>
+      <input type="text" id="insurance" inputmode="numeric" placeholder="例：20000">
+    </div>
+
+    <div class="field">
+      <label for="others">その他経費（月） <span class="hint">駐車場・通信・備品・メンテ等</span></label>
+      <input type="text" id="others" inputmode="numeric" placeholder="例：15000">
+    </div>
+
+    <div class="row2">
+      <div class="field">
+        <label for="workDays">月の稼働日数</label>
+        <input type="text" id="workDays" inputmode="numeric" placeholder="例：22">
+      </div>
+      <div class="field">
+        <label for="workHours">1日の稼働時間</label>
+        <input type="text" id="workHours" inputmode="decimal" placeholder="例：10">
+      </div>
+    </div>
+
+    <button type="submit" class="calc-btn">手取りを計算する</button>
+  </form>
+
+  <!-- 結果表示 -->
+  <div id="result">
+    <div class="card result-main">
+      <p class="result-label">あなたの手取り（経費差引後・税引前）</p>
+      <p class="result-tedori" id="rTedori">月 235,000 円</p>
+      <p class="result-label">時給換算</p>
+      <p class="result-hourly" id="rHourly">1,068 円</p>
+      <p class="result-keep" id="rKeep">売上に対して手元に残るのは 59%</p>
+    </div>
+
+    <div class="card breakdown">
+      <h2>内訳（売上に対する割合）</h2>
+      <table>
+        <tbody id="breakdownBody"></tbody>
+      </table>
+    </div>
+
+    <!-- 診断→出口CTA（結果・内訳の後に出す。広告を先頭に出さない） -->
+    <div class="card cta-section" id="ctaSection" style="display:none">
+      <h2>診断</h2>
+      <p class="diagnosis" id="diagnosisText"></p>
+      <div id="ctaButtons"></div>
+      <p class="cta-pr">PR：上記リンクはアフィリエイト広告を含みます</p>
+    </div>
+
+    <p class="note">
+      ※ この結果は税金・社会保険料を差し引く前の概算です。正確な税額は会計ソフトや税理士でご確認ください。
+    </p>
+  </div>
+
+  <footer>
+    <nav>
+      <a href="about.html">運営者情報</a>｜<a href="privacy.html">プライバシーポリシー</a>｜<a href="contact.html">お問い合わせ</a>
+    </nav>
+    <p class="copy">&copy; 2026 軽貨物ドライバー「本当の手取り」計算ツール</p>
+  </footer>
+
+</div>
+
+<script>
+"use strict";
+
+// ===== アフィリエイト設定（§5）=====
+// ここのURLを差し替えるだけでCTAリンクが切り替わる。
+// URLが空文字("")のプログラムはスキップされ、カテゴリ内に有効URLが
+// 1つもなければそのカテゴリのCTAは自動で非表示になる。
+
+const AFFILIATE = {
+  // --- 即時提携：公開時にすぐ入れる ---
+  lease_immediate:  { name: "オリコで乗ーる", url: "" },
+  gasoline:         { name: "法人ガソリンカード", url: "" },
+  etc:              { name: "法人ETCカード", url: "" },
+
+  // --- 審査通過後に差し替え・追加する本命 ---
+  job_persol:       { name: "パーソル(ドライバー転職)", url: "" },
+  job_levjob:       { name: "レバジョブ", url: "" },
+  lease_niconori:   { name: "ニコノリ", url: "" },
+  insurance_insweb: { name: "インズウェブ(個人自動車保険)", url: "" },
+  insurance_work:   { name: "はたらくクルマの自動車保険", url: "" },
+  accounting_yayoi: { name: "弥生シリーズ", url: "" },
+};
+
+// カテゴリ→プログラムの優先順（§5.1）。先頭からURLが入っているものを使う。
+// リースはニコノリ承認後にURLを入れると自動でオリコから切り替わる。
+const CATEGORY_PROGRAMS = {
+  job:        ["job_persol", "job_levjob"],
+  lease:      ["lease_niconori", "lease_immediate"],
+  insurance:  ["insurance_insweb", "insurance_work"],
+  accounting: ["accounting_yayoi"],
+  fuel:       ["gasoline", "etc"],
+};
+
+// [CTA-LOGIC-BEGIN] ===== 診断→CTA選定（§4.3・純粋ロジック） =====
+
+// CTA定義：文言は提案調・断定禁止・「無料」を明記
+const CTA_DEFS = {
+  job_fee:    { cat: "job",        msg: "手数料の低い会社もあります。条件を比較してみませんか（無料）" },
+  job_hourly: { cat: "job",        msg: "今の条件、見直す価値があるかもしれません。あなたに合う案件を探せます（無料）" },
+  lease:      { cat: "lease",      msg: "その車、リースの方が安くなるかもしれません。無料で比較できます" },
+  insurance:  { cat: "insurance",  msg: "保険は会社によって数万円変わることもあります。無料で一括見積もりできます" },
+  accounting: { cat: "accounting", msg: "正確な税額の把握と経費管理には会計ソフトという手もあります（無料体験あり）" },
+  fuel:       { cat: "fuel",       msg: "燃料費はカードでまとめて管理すると節約につながる場合があります（申込無料）" },
+};
+
+// 最大コスト項目 → 主CTA の対応
+const HEAVY_TO_CTA = {
+  fee:       "job_fee",
+  gasoline:  "fuel",
+  vehicle:   "lease",
+  insurance: "insurance",
+  others:    "accounting",
+};
+
+// カテゴリ内で最初にURLが入っているプログラムを返す（無ければ null）
+function resolveProgram(affiliate, cat) {
+  for (const key of CATEGORY_PROGRAMS[cat]) {
+    const p = affiliate[key];
+    if (p && p.url) return p;
+  }
+  return null;
+}
+
+// 判定：最大コスト項目→主CTA、時給1,300円未満なら求人を優先→副CTA。
+// URL未設定カテゴリはスキップし、常時サブ（会計→燃料）を控えに。最大2個。
+function pickCtas(r, heavyKey, affiliate) {
+  const candidates = [];
+
+  // 主：手数料が最大 or 手数料率≧18% なら求人、それ以外は最大コスト項目に対応
+  if (heavyKey === "fee" || (r.feeType === "percent" && r.feeRate >= 18)) {
+    candidates.push("job_fee");
+  } else if (heavyKey) {
+    candidates.push(HEAVY_TO_CTA[heavyKey]);
+  }
+
+  // 副：時給が低ければ求人を優先
+  if (r.hourlyWage !== null && r.hourlyWage < 1300) {
+    candidates.push("job_hourly");
+  }
+
+  // 常時サブ候補（上が未提携で出せないときの控え）
+  candidates.push("accounting", "fuel");
+
+  const picked = [];
+  const usedCats = new Set();
+  for (const key of candidates) {
+    if (picked.length >= 2) break;
+    const def = CTA_DEFS[key];
+    if (usedCats.has(def.cat)) continue;        // 同カテゴリの重複は出さない
+    const program = resolveProgram(affiliate, def.cat);
+    if (!program) continue;                     // URL未設定カテゴリはスキップ
+    usedCats.add(def.cat);
+    picked.push({ key, cat: def.cat, msg: def.msg, program });
+  }
+  return picked;
+}
+// [CTA-LOGIC-END]
+
+// ===== 入力ユーティリティ =====
+
+// 全角数字・記号を半角に変換（ドライバーはスマホ入力のため）
+function toHalfWidth(str) {
+  return str
+    .replace(/[０-９]/g, ch => String.fromCharCode(ch.charCodeAt(0) - 0xFEE0))
+    .replace(/．/g, ".")
+    .replace(/，/g, ",")
+    .replace(/－/g, "-");
+}
+
+// 未入力・不正値は 0 として扱い、計算は落とさない
+function readNum(id) {
+  const raw = document.getElementById(id).value;
+  const half = toHalfWidth(raw).replace(/[,\s円%]/g, "");
+  const n = parseFloat(half);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function fmt(n) {
+  return Math.round(n).toLocaleString("ja-JP");
+}
+
+// ===== 手数料タイプ切替 =====
+
+let feeType = "percent";
+const feeTypeSeg = document.getElementById("feeTypeSeg");
+feeTypeSeg.addEventListener("click", e => {
+  const btn = e.target.closest("button[data-type]");
+  if (!btn) return;
+  feeType = btn.dataset.type;
+  feeTypeSeg.querySelectorAll("button").forEach(b =>
+    b.classList.toggle("active", b === btn)
+  );
+  document.getElementById("feeRateField").style.display = feeType === "percent" ? "" : "none";
+  document.getElementById("feeFixedField").style.display = feeType === "fixed" ? "" : "none";
+});
+
+// ===== 計算ロジック（§3） =====
+
+function calculate() {
+  const uriage = readNum("uriage");
+  const feeRate = readNum("feeRate");
+  const feeFixed = readNum("feeFixed");
+  const gasoline = readNum("gasoline");
+  const vehicle = readNum("vehicle");
+  const insurance = readNum("insurance");
+  const others = readNum("others");
+  const workDays = readNum("workDays");
+  const workHours = readNum("workHours");
+
+  const feeAmount = feeType === "percent" ? uriage * (feeRate / 100) : feeFixed;
+  const expenses = gasoline + vehicle + insurance + others;
+  const netBeforeTax = uriage - feeAmount - expenses;
+
+  const totalHours = workDays * workHours;
+  const hourlyWage = totalHours > 0 ? netBeforeTax / totalHours : null;
+  const keepRate = uriage > 0 ? (netBeforeTax / uriage) * 100 : null;
+
+  return {
+    uriage, feeAmount, feeRate, feeType,
+    gasoline, vehicle, insurance, others,
+    netBeforeTax, hourlyWage, keepRate,
+  };
+}
+
+// ===== 結果表示（§4.1〜4.2） =====
+
+function render(r) {
+  // --- 4.1 結果（大きく見せる） ---
+  const tedoriEl = document.getElementById("rTedori");
+  tedoriEl.textContent = `月 ${fmt(r.netBeforeTax)} 円`;
+  tedoriEl.classList.toggle("negative", r.netBeforeTax < 0);
+
+  const hourlyEl = document.getElementById("rHourly");
+  if (r.hourlyWage === null) {
+    hourlyEl.textContent = "－（稼働時間を入力）";
+    hourlyEl.classList.remove("negative");
+  } else {
+    hourlyEl.textContent = `${fmt(r.hourlyWage)} 円`;
+    hourlyEl.classList.toggle("negative", r.hourlyWage < 0);
+  }
+
+  const keepEl = document.getElementById("rKeep");
+  keepEl.textContent = r.keepRate === null
+    ? "売上を入力すると手残り率が出ます"
+    : `売上に対して手元に残るのは ${Math.round(r.keepRate)}%`;
+
+  // --- 4.2 内訳（重い項目を強調） ---
+  const feeLabel = r.feeType === "percent" ? `手数料(${r.feeRate}%)` : "手数料(固定)";
+  const costs = [
+    { key: "fee",       label: feeLabel,   amount: r.feeAmount },
+    { key: "gasoline",  label: "ガソリン", amount: r.gasoline },
+    { key: "vehicle",   label: "車両費",   amount: r.vehicle },
+    { key: "insurance", label: "保険",     amount: r.insurance },
+    { key: "others",    label: "その他",   amount: r.others },
+  ];
+
+  // 最も大きいコスト項目（0円しかない場合は強調なし）
+  const maxAmount = Math.max(...costs.map(c => c.amount));
+  const heavyKey = maxAmount > 0 ? costs.find(c => c.amount === maxAmount).key : null;
+
+  const pct = amount =>
+    r.uriage > 0 ? `${(amount / r.uriage * 100).toFixed(1)}%` : "－";
+
+  const rows = [];
+  rows.push(`<tr><td>売上</td><td class="amount">${fmt(r.uriage)}</td><td class="pct">100%</td></tr>`);
+  for (const c of costs) {
+    const heavy = c.key === heavyKey;
+    rows.push(
+      `<tr${heavy ? ' class="heavy"' : ""}>` +
+      `<td>− ${c.label}${heavy ? '<span class="heavy-tag">ここが重い</span>' : ""}</td>` +
+      `<td class="amount">${fmt(c.amount)}</td>` +
+      `<td class="pct">${pct(c.amount)}</td></tr>`
+    );
+  }
+  rows.push(
+    `<tr class="total"><td>手残り</td>` +
+    `<td class="amount${r.netBeforeTax < 0 ? " negative" : ""}">${fmt(r.netBeforeTax)}</td>` +
+    `<td class="pct">${pct(Math.max(r.netBeforeTax, 0))}</td></tr>`
+  );
+  document.getElementById("breakdownBody").innerHTML = rows.join("");
+
+  // --- 4.3 診断→出口CTA（結果・内訳の後） ---
+  const heavyCost = heavyKey ? costs.find(c => c.key === heavyKey) : null;
+  renderCta(r, heavyCost);
+
+  // 結果を表示してスクロール
+  const result = document.getElementById("result");
+  result.style.display = "block";
+  result.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+// ===== 診断→CTA表示（§4.3） =====
+
+function renderCta(r, heavyCost) {
+  const section = document.getElementById("ctaSection");
+  const diagEl = document.getElementById("diagnosisText");
+  const btnsEl = document.getElementById("ctaButtons");
+  btnsEl.textContent = "";
+
+  const ctas = pickCtas(r, heavyCost ? heavyCost.key : null, AFFILIATE);
+
+  // 診断コメント（CTAが出せなくても、重い項目があれば表示する）
+  const lines = [];
+  if (heavyCost && r.uriage > 0) {
+    const share = (heavyCost.amount / r.uriage * 100).toFixed(1);
+    lines.push(`あなたは <strong>${heavyCost.label}</strong> の負担が重めです（売上の${share}%）。`);
+  } else if (heavyCost) {
+    lines.push(`あなたは <strong>${heavyCost.label}</strong> の負担が重めです。`);
+  }
+  if (r.hourlyWage !== null && r.hourlyWage < 1300) {
+    lines.push(`時給換算 ${fmt(r.hourlyWage)}円 は低めかもしれません。`);
+  }
+
+  if (lines.length === 0 && ctas.length === 0) {
+    section.style.display = "none";
+    return;
+  }
+  diagEl.innerHTML = lines.join("<br>");
+
+  // CTAボタン：主1・副1（最大2個）。URL未設定カテゴリは pickCtas 側でスキップ済み
+  ctas.forEach((cta, i) => {
+    const item = document.createElement("div");
+    item.className = "cta-item";
+
+    const msg = document.createElement("p");
+    msg.className = "cta-msg";
+    msg.textContent = cta.msg;
+    item.appendChild(msg);
+
+    const a = document.createElement("a");
+    a.className = "cta-btn" + (i > 0 ? " secondary" : "");
+    a.href = cta.program.url;
+    a.target = "_blank";
+    a.rel = "noopener sponsored nofollow";
+    a.textContent = `${cta.program.name} を見てみる`;
+    item.appendChild(a);
+
+    btnsEl.appendChild(item);
+  });
+
+  section.style.display = "block";
+}
+
+document.getElementById("calcForm").addEventListener("submit", e => {
+  e.preventDefault();
+  render(calculate());
+});
+</script>
+</body>
+</html>
